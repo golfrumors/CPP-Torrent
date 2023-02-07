@@ -1,3 +1,4 @@
+#include "BEncoding.h"
 
 namespace BitTorrent{
 	class BEncoding{
@@ -11,6 +12,11 @@ namespace BitTorrent{
 			static constexpr char ByteArrDivider = ':';
 
 			static std::any Decode(const std::vector<char>& bytes);
+	};
+
+	class BEncodeValue {
+		public:
+			std::variant<std::vector<BEncodeValue>, std::map<std::string, BEncodeValue>, std::string, int> value;
 	};
 }
 
@@ -204,3 +210,89 @@ void EncodeInt(vector<unsigned char>& buffer, long long input) {
 }
 
 //private
+void EncodeList(std::vector<uint8_t>& buffer, const std::vector<std::variant<std::string, long, std::vector<uint8_t>, std::map<std::string, std::variant<std::string, long, std::vector<uint8_t>, std::map<std::string, std::variant<std::string, long, std::vector<uint8_t>, std::map<std::string, std::variant<std::string, long, std::vector<uint8_t>, std::map<std::string, std::variant<std::string, long, std::vector<uint8_t>>>>>>>>>& input)
+{
+    buffer.push_back(ListStart);
+    for (const auto& item : input)
+        EncodeNextObject(buffer, item);
+    buffer.push_back(ListEnd);
+}
+
+//private
+void EncodeDict(std::vector<unsigned char>& buffer, std::map<std::string, std::shared_ptr<BEncodeValue>> input) {
+	buffer.push_back(DictStart);
+
+	std::vector<std::string> sortedKeys;
+	for(const auto& item : input) {
+		sortedKeys.push_back(item.first);
+	}
+	sort(sortedKeys.begin(), sortedKeys.end(), [](const std::string& a, const std::string& b) {
+		return a < b;
+	});
+
+	for (const auto& key : sortedKeys) {
+		EncodeStr(buffer, key);
+		EncodeNextObj(buffer, input[key]);
+	}
+
+	buffer.push_back(DictEnd);
+}
+
+//public
+template<typename T>
+std::string GetFormattedString(const T& obj, int depth = 0) {
+	std::string output = "";
+	if constexpr (std::is_same<T,std::vector<uint8_t>::value) {
+		output += GetFormattedString(obj);
+	} else if constexpr (std::is_integral_v<T>) {
+		output += GetFormattedString(obj);
+	} else if constexpr (std::is_same_v<T, std::vector<std::any>>) {
+		output += GetFormattedString(obj, depth);
+	} else if constexpr (std::is_same_v<T, std::map<std::string, std::any>>) {
+		output += GetFormattedString(obj, depth);
+	} else {
+		throw std::runtime_error("unable to encode type");
+	}
+
+	return output;
+}
+
+//private
+std::string GetFormattedString(const std::vector<unsigned char>& obj) {
+	std::ostringstream result;
+	result << std::hex << std::setfill('0');
+	
+	for(const auto& element : obj) {
+		result << std::setw(2) << static_cast<int>(element);
+	}
+
+	result << " (" << std::string(obj.begin(), obj.end()) << ")";
+
+	return result.str();
+}
+
+//private
+std::string GetFormattedString(long obj) {
+	std::ostringstream ss;
+	ss << obj;
+	return ss.str();
+}
+
+//private
+template<typename T>
+std::string GetFormattedString(const std::vector<T>& obj, int depth) {
+	std::string pad1(depth * 2, ' ');
+	std::string pad2((depth + 1) * 2, ' ');
+
+	if(obj.empty())
+		return "[]";
+
+	if (std::is_same<T, std::map<std::string, T>>::value)
+		return "\n" + pad1 + "[" + std::accumulate(obj.begin(), obj.end(), std::string(""), [depth, pad2](const std::string& a, const T& b) {
+			return a + pad2 + GetFormattedString(b, depth + 1);
+		}) + "\n" + pad1 + "]";
+
+	return "[ " + std::accumulate(obj.begin(), obj.end(), std::string(""), [](const std::string& a, const T& b) {
+		return a + GetFormattedString(b);
+	}) + " ]";
+}
