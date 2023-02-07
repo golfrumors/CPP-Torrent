@@ -130,3 +130,77 @@ std::vector<byte> DecodeByteArr(std::vector<byte>::iterator& it){
 
 	return bytes;
 }
+
+long long DecodeInt(std::list<unsigned char>::iterator &it){
+	std::list<unsigned char> bytes;
+
+	//pull bytes until flag
+	while(*it != IntEnd) {
+		bytes.push_back(*it);
+		it++;
+	}
+
+	std::string numAsString;
+	for(unsigned char byte : bytes){
+		numAsString += byte;
+	}
+
+	return std::stoll(numAsString);
+}
+
+//Encode
+std::vector<unsigned char> Encode(const Object& obj) {
+	std::vector<unsigned char> buffer;
+	EncodeNextObj(buffer, obj);
+	
+	return buffer;
+}
+
+void EncodeNextObj(std::vector<byte>& buffer, connst Object& obj) {
+	if(auto byteArr = dynamic_cast<const vector<byte> *>(&obj)) {
+		EncodeByteArr(buffer, *byteArr);
+	} else if (auto str = dynamic_cast<const string *>(&obj)) {
+		EncodeStr(buffer, *str);
+	} else if (auto num = dynamic_cast<const long *>(&obj)) {
+		EncodeInt(buffer, *num);
+	} else if (const list<Object> *list = dynamic_cast<const list<Object> *>(&obj)) {
+		EncodeList(buffer, *list);
+	} else if (const map<string, object> *dict = dynamic_cast<const map<string, Object> *>(&obj)) {
+		EncodeDict(buffer, *dict);
+	} else {
+		throw std::exception("Unable to encode the type " + typeid(obj).name());
+	}
+}
+
+//public
+void EncodeToFile(const std::vector<uint8_t>& encoded, const std::string& path) {
+	std::ofstream file(path, std::ios::binary);
+	file.write(reinterpret_cast<const char*>(encoded.data()), encoded.size());
+}
+
+//private
+void EncodeByteArr(std:vector<uint8_t>& buffer, const std::vector<uint8_t>& body) {
+	std::string lenStr = std::to_string(body.size());
+	std::vector<uint8_t> lenBytes(lenStr.begin(), lenStr.end());
+
+	buffer.insert(buffer.end(), lenBytes.begin(), lenBytes.end());
+	buffer.push_back(ByteArrDivider);
+	buffer.insert(buffer.end(), body.begin(), body.end());
+}
+
+//private
+void EncodeStr(vector<unsigned char>& buffer, const string& input) {
+	vector<unsigned char> input_bytes = vector<unsigned char>(input.begin(), input.end());
+	EncodeByteArr(buffer, input_bytes);
+}
+
+//private
+void EncodeInt(vector<unsigned char>& buffer, long long input) {
+	buffer.push_back(IntStart);
+	string inputStr = to_string(input);
+	vector<unsigned char> inputBytes = vector<unsigned char>(inputStr.begin(), inputStr.end());
+	buffer.insert(buffer.end(), inputBytes.begin(), inputBytes.end());
+	buffer.push_back(IntEnd);
+}
+
+//private
