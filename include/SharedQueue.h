@@ -52,7 +52,7 @@ T& SharedQueue<T>::pop_front() {
     }
     T& front = _queue.front();
     _queue.pop_front();
-    return item;
+    return front;
 }
 
 template <typename T>

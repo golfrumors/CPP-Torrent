@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <bencode/BDictionary.h>
+#include "../lib/bencode/BDictionary.h"
 
 class TorrentParser {
     public:
