@@ -10,6 +10,7 @@
 
 #include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "BItem.h"
