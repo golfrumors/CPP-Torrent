@@ -17,9 +17,9 @@ enum MessageId {
 
 class BitMessage {
     private:
-        const uint32_t msgLength;
-        const uint8_t msgID;
-        const std::string payload;
+        const uint32_t _msgLength;
+        const uint8_t _msgID;
+        const std::string _payload;
 
     public:
         explicit BitMessage(uint8_t id, const std::string& payload = "");

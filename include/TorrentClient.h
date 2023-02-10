@@ -14,11 +14,11 @@ class TorrentClient {
         void downloadFile(const std::string& torrentPath, const std::string& downloadDir);
 
     private:
-        const int threadNum;
-        std::string peerID;
-        SharedQueue<Peer*> queue;
-        std::vector<std::thread> threadPool;
-        std::vector<PeerConnection*> connections;
+        const int _threadNum;
+        std::string _peerID;
+        SharedQueue<Peer*> _queue;
+        std::vector<std::thread> _threadPool;
+        std::vector<PeerConnection*> _connections;
 };
 
 

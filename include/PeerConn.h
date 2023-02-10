@@ -18,17 +18,17 @@ class PeerConnection {
         void stop();
 
     private:
-        int socket{};
-        bool choked = true;
-        bool terminated = false;
-        bool requestPending = false;
-        const std::string clinetID;
-        const std::string infoHash;
-        SharedQueue<Peer*>* queue;
-        Peer* peer;
-        std::string peerBitField;
-        std::string peerID;
-        PieceManager* pieceManager;
+        int _socket{};
+        bool _choked = true;
+        bool _terminated = false;
+        bool _requestPending = false;
+        const std::string _clinetID;
+        const std::string _infoHash;
+        SharedQueue<Peer*>* _queue;
+        Peer* _peer;
+        std::string _peerBitField;
+        std::string _peerID;
+        PieceManager* _pieceManager;
 
         std::string createHandshakeMsg();
         void performHandshake();

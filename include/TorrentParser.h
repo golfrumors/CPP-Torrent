@@ -15,6 +15,9 @@ class TorrentParser {
         std::shared_ptr<bencoding::BItem> get(std::string key) const;
         std::string getInfoHash() const;
         std::vector<std::string> splitPieceHashes() const;
+
+    private:
+        std::sharedptr<bencoding::BDictionary> _root;
 };
 
 #endif // TORRENTPARSER_H

@@ -35,7 +35,7 @@ class PieceManager {
         std::vector<Piece*> _completedPieces;
         std::vector<PendingReq*> _pendingReqs;
         std::ofstream _downloadedFile;
-        const long pieceLen;
+        const long _pieceLen;
         const TorrentParser& _fileParser;
         const int _maxConn;
         int _pieceDownloadInterval = 0;
@@ -43,7 +43,7 @@ class PieceManager {
         int _totalPieces{};
 
         //lock to prevent race condition
-        std::mutex lock;
+        std::mutex _lock;
 
         std::vector<Piece*> initiatePieces();
         Block* expiredReq(std::string peerID);

@@ -1,6 +1,8 @@
 #ifndef PIECE_H
 #define PIECE_H
 
+#include "Block.h"
+
 class Piece {
     public:
         const int index;
@@ -15,7 +17,7 @@ class Piece {
         bool isHashValid();
 
     private:
-        const std::string hashValue;
+        const std::string _hashValue;
 };
 
 #endif // PIECE_H
