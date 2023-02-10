@@ -22,7 +22,7 @@ class PeerConnection {
         bool _choked = true;
         bool _terminated = false;
         bool _requestPending = false;
-        const std::string _clinetID;
+        const std::string _clientID;
         const std::string _infoHash;
         SharedQueue<Peer*>* _queue;
         Peer* _peer;
@@ -41,6 +41,5 @@ class PeerConnection {
         BitMessage receiveMessage(int buffSize = 0) const;
 
 
-}
-
+};
 #endif // PEERCONN_H
