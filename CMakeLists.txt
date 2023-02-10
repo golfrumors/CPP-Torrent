@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.19)
-project(TorrentClient)
+
+set(CMAKE_CXX_COMPILER "g++")
+
+project(TorrentClient VERSION 1.0.0 LANGUAGE CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 include_directories(lib)

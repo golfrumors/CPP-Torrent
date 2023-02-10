@@ -15,4 +15,6 @@ int bytesToInteger(const std::string& bytes);
 
 std::string formatTime(long seconds);
 
+void fastMemcpy(void* pvDest, void* pvSrc, size_t nBytes);
+
 #endif // UTILS_H
