@@ -21,7 +21,7 @@ class PieceManager {
         explicit PieceManager(const TorrentParser& fileParser, const std::string& downloadPth, int maxConn);
         ~PieceManager();
         bool complete();
-        void blockReceived(std::string peerID, int pieceIndex, int blockOffset, int blockSize, std::string blockData);
+        void blockReceived(std::string peerID, int pieceIndex, int blockOffset, std::string blockData);
         void addPeer(const std::string& peerID, std::string bitField);
         void removePeer(const std::string& peerID);
         void updatePeer(const std::string& peerID, int index);
