@@ -16,6 +16,31 @@ class PeerConnection {
         ~PeerConnection();
         void start();
         void stop();
+
+    private:
+        int socket{};
+        bool choked = true;
+        bool terminated = false;
+        bool requestPending = false;
+        const std::string clinetID;
+        const std::string infoHash;
+        SharedQueue<Peer*>* queue;
+        Peer* peer;
+        std::string peerBitField;
+        std::string peerID;
+        PieceManager* pieceManager;
+
+        std::string createHandshakeMsg();
+        void performHandshake();
+        void receiveBitField();
+        void sendInterested();
+        void receiveUnchoke();
+        void sendRequest();
+        void closeSocket();
+        bool connectionEstablished();
+        BitMessage receiveMessage(int buffSize = 0) const;
+
+
 }
 
 #endif // PEERCONN_H
