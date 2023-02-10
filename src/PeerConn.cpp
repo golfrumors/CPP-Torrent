@@ -25,7 +25,7 @@ PeerConn::PeerConn(
 ) : queue(queue), clientID(std::move(clientID)), infoHash(std::move(infoHash)), pieceManager(pieceManager) {}
 
 PeerConn:~PeerConn() {
-    closeSock();
+    closeSocket();
     LOG_F(INFO, "Download was termniated");
 }
 
@@ -79,7 +79,7 @@ void PeerConn:start() {
                     }
                     if (!choked) {
                         if(!requestPending){
-                            requestPiece();
+                            sendRequest();
                         }
                     }
             }
@@ -89,7 +89,7 @@ void PeerConn:start() {
     }
 
     catch (std::exception& e) {
-        closeSock();
+        closeSocket();
         LOG_F(ERROR, "Error occured while downloading from peer %s: [%s]", peerID.c_str(), peer->ip.c_str());
         LOG_F(ERROR, "Error: %s", e.what());
     }
