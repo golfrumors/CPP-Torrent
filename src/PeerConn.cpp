@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <string>
 #include <iostream>
 #include <cassert>
 #include <cstring>
@@ -20,59 +21,59 @@
 #define HASH_LEN 20
 #define DUMMY_PEER "0.0.0.0"
 
-PeerConn::PeerConn(
+PeerConnection::PeerConnection(
     SharedQueue<Peer*>* queue,
     std::string clientID,
     std::string infoHash,
     PieceManager* pieceManager
-) : queue(queue), clientID(std::move(clientID)), infoHash(std::move(infoHash)), _pieceManager(pieceManager) {}
+) : _queue(queue), _clientID(std::move(clientID)), _infoHash(std::move(infoHash)), _pieceManager(pieceManager) {}
 
-PeerConn:~PeerConn() {
+PeerConnection::~PeerConnection() {
     closeSocket();
     LOG_F(INFO, "Download was termniated");
 }
 
-void PeerConn:start() {
+void PeerConnection::start() {
     LOG_F(INFO, "Downloading is started...");
-    while(!(terminated || pieceManager->isComplete())){
-        peer = queue->pop_front();
+    while(!(_terminated || _pieceManager->complete())){
+        _peer = _queue->pop_front();
         //terminate thread if dummy
-        if (peer->ip == DUMMY_PEER) {
+        if (_peer->ip == DUMMY_PEER) {
             return;
         }
 
         try {
             //establish connection with peer
 
-            if(establishNewConnection()) {
-                while(!pieceManager->isComplete()) {
+            if(connectionEstablished()) {
+                while(!_pieceManager->complete()) {
                     BitMessage msg = receiveMessage();
-                    if(msg.getMessageId() > 10)
+                    if(msg.getMsgId() > 10)
                         throw std::runtime_error("Invalid message id received from peer " + peer->ip);
 
-                    switch(msg.getMessageId()) {
+                    switch(msg.getMsgId()) {
                         case choke:
-                            choked = true;
+                            _choked = true;
                             break;
 
                         case unchoke:
-                            choked = false;
+                            _choked = false;
                             break;
                         
                         case piece: {
-                            requestPending = false;
-                            std::string payload = message.getPayload();
+                            _requestPending = false;
+                            std::string payload = msg.getPayload();
                             int pieceIndex = bytesToInteger(payload.substr(0, 4));
                             int blockOffset = bytesToInteger(payload.substr(4, 4));
                             std::string blockData = payload.substr(8);
-                            pieceManager->blockReceived(peerID, pieceIndex, blockOffset, blockData);
+                            _pieceManager->blockReceived(_peerID, pieceIndex, blockOffset, blockData);
                             break;
                         }
 
                         case have: {
-                            std::string payload = message.getPayload();
+                            std::string payload = msg.getPayload();
                             int pieceIndex = bytesToInteger(payload);
-                            pieceManager->updatePeer(peerID, pieceIndex);
+                            _pieceManager->updatePeer(_peerID, pieceIndex);
                             break;
                         }
 
@@ -80,8 +81,8 @@ void PeerConn:start() {
                             break;
                         
                     }
-                    if (!choked) {
-                        if(!requestPending){
+                    if (!_choked) {
+                        if(!_requestPending){
                             sendRequest();
                         }
                     }
