@@ -59,16 +59,16 @@ template <typename T>
 void SharedQueue<T>::push_back(const T& item) {
     std::unique_lock<std::mutex> mlock(_mutex);
     _queue.push_back(item);
-    mlock.unlock(); //unlock before notificiation to minimize mutex contention
-    _cond.notify_one(); //notify one waiting thread
+    mlock.unlock();
+    _cond.notify_one();
 }
 
 template <typename T>
 void SharedQueue<T>::push_back(T&& item) {
     std::unique_lock<std::mutex> mlock(_mutex);
     _queue.push_back(std::move(item));
-    mlock.unlock(); //unlock before notificiation to minimize mutex contention
-    _cond.notify_one(); //notify one waiting thread
+    mlock.unlock();
+    _cond.notify_one();
 }
 
 //empty the queue
