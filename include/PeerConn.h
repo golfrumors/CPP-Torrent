@@ -30,15 +30,15 @@ class PeerConnection {
         std::string _peerID;
         PieceManager* _pieceManager;
 
-        std::string createHandshakeMsg();
-        void performHandshake();
-        void receiveBitField();
-        void sendInterested();
-        void receiveUnchoke();
-        void sendRequest();
-        void closeSocket();
-        bool connectionEstablished();
-        BitMessage receiveMessage(int buffSize = 0) const;
+        std::string _createHandshakeMsg();
+        void _performHandshake();
+        void _receiveBitField();
+        void _sendInterested();
+        void _receiveUnchoke();
+        void _sendRequest();
+        void _closeSocket();
+        bool _connectionEstablished();
+        BitMessage _receiveMessage(int buffSize = 0) const;
 
 
 };
