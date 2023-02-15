@@ -9,4 +9,6 @@ the program does perform a check, however, the check is dependant on the
 G++ compiler flag, "__builtin_cpu_supports("avx2")" and CMake doesn't have the
 best history of listening to the specified compiler flags. So, do with that what you will.
 
+[Class diagram of some sort](https://tinyurl.com/3azczsxx)
+
 *TODO: Everything & add explanation to fastMemCpy() func
