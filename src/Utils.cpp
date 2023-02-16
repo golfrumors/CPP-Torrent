@@ -6,8 +6,7 @@
 
 #include "include/Utils.h"
 
-
-
+//fast memory copy util func, only available on AVX2 compliant cpus
 void fastMemcpy(void* ptrDest, void* ptrSrc, size_t nBytes) {
         assert(nBytes % 32 == 0);
         assert((intptr_t(ptrDest) & 31) == 0);
