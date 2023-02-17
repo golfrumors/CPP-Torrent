@@ -29,7 +29,7 @@ PeerConnection::PeerConnection(
 ) : _queue(queue), _clientID(std::move(clientID)), _infoHash(std::move(infoHash)), _pieceManager(pieceManager) {}
 
 PeerConnection::~PeerConnection() {
-    _closeSocket();
+    closeSocket();
     LOG_F(INFO, "Download was termniated");
 }
 
@@ -45,9 +45,9 @@ void PeerConnection::start() {
         try {
             //establish connection with peer
 
-            if(_connectionEstablished()) {
+            if(connectionEstablished()) {
                 while(!_pieceManager->complete()) {
-                    BitMessage msg = _receiveMessage();
+                    BitMessage msg = receiveMessage();
                     if(msg.getMsgId() > 10)
                         throw std::runtime_error("Invalid message id received from peer " + _peer->ip);
 
@@ -83,7 +83,7 @@ void PeerConnection::start() {
                     }
                     if (!_choked) {
                         if(!_requestPending){
-                            _sendRequest();
+                            sendRequest();
                         }
                     }
             }
@@ -93,7 +93,7 @@ void PeerConnection::start() {
     }
 
     catch (std::exception& e) {
-        _closeSocket();
+        closeSocket();
         LOG_F(ERROR, "Error occured while downloading from peer %s: [%s]", _peerID.c_str(), _peer->ip.c_str());
         LOG_F(ERROR, "Error: %s", e.what());
     }
@@ -107,7 +107,7 @@ void PeerConnection::stop() {
 }
 
 //create TCP conn to peer
-void PeerConnection::_performHandshake() {
+void PeerConnection::performHandshake() {
     LOG_F(INFO, "Connecting to peer [%s]", _peer->ip.c_str());
 
     try {
@@ -120,7 +120,7 @@ void PeerConnection::_performHandshake() {
 
     //send handshake
     LOG_F(INFO, "Sending handshake to peer [%s]", _peer->ip.c_str());
-    std::string handshakeMsg = _createHandshakeMsg();
+    std::string handshakeMsg = createHandshakeMsg();
     sendData(_socket, handshakeMsg);
     LOG_F(INFO, "Handshake sent to peer [%s], success!", _peer->ip.c_str());
 
@@ -143,9 +143,9 @@ void PeerConnection::_performHandshake() {
 }
 
 //read bitfield from peer
-void PeerConnection::_receiveBitField() {
+void PeerConnection::receiveBitField() {
     LOG_F(INFO, "Receive message from peer [%s]", _peer->ip.c_str());
-    BitMessage msg = _receiveMessage();
+    BitMessage msg = receiveMessage();
 
     if(msg.getMsgId() != bitfield) {
         throw std::runtime_error("Expected bitfield message from peer [" + _peer->ip + "]");
@@ -159,7 +159,7 @@ void PeerConnection::_receiveBitField() {
 }
 
 //send request to peer for block
-void PeerConnection::_sendRequest() {
+void PeerConnection::sendRequest() {
     Block* block = _pieceManager->nextReq(_peerID);
 
     if(block == nullptr) {
@@ -212,16 +212,16 @@ void PeerConnection::_sendRequest() {
     free(tmp);
 }
 
-void PeerConnection::_sendInterested() {
+void PeerConnection::sendInterested() {
     LOG_F(INFO, "Sending interested message to peer [%s]", _peer->ip.c_str());
     std::string interestedMsg = BitMessage(interested).toString();
     sendData(_socket, interestedMsg);
     LOG_F(INFO, "Interested message sent to peer [%s], success!", _peer->ip.c_str());
 }
 
-void PeerConnection::_receiveUnchoke() {
+void PeerConnection::receiveUnchoke() {
     LOG_F(INFO, "Receiving unchoke message from peer [%s]", _peer->ip.c_str());
-    BitMessage msg = _receiveMessage();
+    BitMessage msg = receiveMessage();
 
     if(msg.getMsgId() != unchoke) {
         throw std::runtime_error("Expected unchoke message from peer [" + _peer->ip + "]");
@@ -231,11 +231,11 @@ void PeerConnection::_receiveUnchoke() {
 }
 
 //attempt to establis a new connection
-bool PeerConnection::_connectionEstablished() {
+bool PeerConnection::connectionEstablished() {
     try {
-        _performHandshake();
-        _receiveBitField();
-        _sendInterested();
+        performHandshake();
+        receiveBitField();
+        sendInterested();
         return true;
     } catch (std::exception& e) {
         LOG_F(ERROR, "Error occured while establishing connection with peer [%s]", _peer->ip.c_str());
@@ -244,7 +244,7 @@ bool PeerConnection::_connectionEstablished() {
     }
 }
 
-std::string PeerConnection::_createHandshakeMsg() {
+std::string PeerConnection::createHandshakeMsg() {
     const std::string pstr = "BitTorrent protocol";
 
     std::stringstream ss;
@@ -267,7 +267,7 @@ std::string PeerConnection::_createHandshakeMsg() {
     return ss.str();
 }
 
-BitMessage PeerConnection::_receiveMessage(int bufferSize) const {
+BitMessage PeerConnection::receiveMessage(int bufferSize) const {
     std::string reply = receiveData(_socket, bufferSize);
 
     if(reply.empty()) {
@@ -284,7 +284,7 @@ const std::string& PeerConnection::getPeerID() const {
     return _peerID;
 }
 
-void PeerConnection::_closeSocket() {
+void PeerConnection::closeSocket() {
     if(_socket) {
         LOG_F(INFO, "Closing socket for peer [%s]", _peer->ip.c_str());
         close(_socket);
