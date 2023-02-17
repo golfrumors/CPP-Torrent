@@ -64,6 +64,10 @@ std::vector<Peer*> PeerRetriever::decodeResponse(std::string resp) {
 
     std::vector<Peer*> peers;
 
-    
+	if(typeid(*peersValue) == typeid(bencoding::BString)) {
+		const int peerInfSize = 6;
+		std::string peersString = std::dynamic_pointer_cast<bencoding::BString>(peersVal)->value();
+
+	}    
 
 }
