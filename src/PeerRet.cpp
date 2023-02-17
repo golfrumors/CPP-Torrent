@@ -64,10 +64,58 @@ std::vector<Peer*> PeerRetriever::decodeResponse(std::string resp) {
 
     std::vector<Peer*> peers;
 
-	if(typeid(*peersValue) == typeid(bencoding::BString)) {
+	if(typeid(*peersVal) == typeid(bencoding::BString)) {
 		const int peerInfSize = 6;
 		std::string peersString = std::dynamic_pointer_cast<bencoding::BString>(peersVal)->value();
 
-	}    
+        if(peersString.length() % peerInfSize != 0) {
+            throw std::runtime_error("Invalid peers string returned from tracker");
+        }
 
+        const int peerNum = peersString.length() / peerInfSize;
+
+        for (int i = 0; i < peerNum; i++) {
+            int offset = i * peerInfSize;
+            std::stringstream peerIP;
+            peerIP << std::to_string((uint8_t) peersString[offset]) << ".";
+            peerIP << std::to_string((uint8_t) peersString[offset + 1]) << ".";
+            peerIP << std::to_string((uint8_t) peersString[offset + 2]) << ".";
+            peerIP << std::to_string((uint8_t) peersString[offset + 3]);
+
+            int peerPort = bytesToInteger(peersString.substr(offset + 4, 2));
+
+            Peer* newPeer = new Peer {peerIP.str(), peerPort};
+            peers.push_back(newPeer);
+        }
+	} else if (typeid(*peersVal) == typeid(bencoding::BList)) {
+        std::shared_ptr<bencoding::BList> peersList = std::dynamic_pointer_cast<bencoding::BList>(peersVal);
+
+        for (auto &item : *peersList) {
+            std::shared_ptr<bencoding::BDictionary> peerDict = std::dynamic_pointer_cast<bencoding::BDictionary>(item);
+
+
+            std::shared_ptr<bencoding::BItem> tmpIP = peerDict->getValue("ip");
+
+            if (!tmpIP)
+                throw std::runtime_error("No ip in peer dictionary");
+
+            std::string peerIP = std::dynamic_pointer_cast<bencoding::BString>(tmpIP)->value();
+
+            std::shared_ptr<bencoding::BItem> tmpPort = peerDict->getValue("port");
+
+            if (!tmpPort)
+                throw std::runtime_error("No port in peer dictionary");
+
+            int peerPort = (int) std::dynamic_pointer_cast<bencoding::BInteger>(tmpPort)->value();
+            
+            Peer* newPeer = new Peer {peerIP, peerPort};
+            peers.push_back(newPeer);
+        }
+    } else {
+        throw std::runtime_error("Invalid peers value in response returned from tracker");
+    }
+
+    LOG_F(INFO, "Decode response: SUCCESS");
+    LOG_F(INFO, "Decoded %d peers", peers.size());
+    return peers;
 }
