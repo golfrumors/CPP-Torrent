@@ -1,8 +1,8 @@
 #include "Utils.h"
 #include "PeerRet.h"
 
-#include "../lib/loguru/loguru.hpp"
-#include "../lib/bencode/bencoding.h"
+#include <loguru/loguru.hpp>
+#include <bencode/bencoding.h>
 
 #include <string>
 #include <iostream>

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <bitset>
+
 #include "../include/BitMessage.h"
 
 BitMessage::BitMessage(const uint8_t id, const std::string& payload) : 

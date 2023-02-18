@@ -13,7 +13,7 @@
 #include "include/Utils.h"
 #include "include/Connect.h"
 
-#include "../lib/loguru/loguru.hpp"
+#include <loguru/loguru.hpp>
 
 
 #define INFO_HASH_START 28

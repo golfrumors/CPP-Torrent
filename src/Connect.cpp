@@ -11,7 +11,7 @@
 #include <chrono>
 #include <limits>
 
-#include "../lib/loguru/loguru.hpp"
+#include <loguru/loguru.hpp>
 
 #include "include/Connect.h"
 #include "include/Utils.h"
