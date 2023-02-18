@@ -17,4 +17,5 @@ std::string formatTime(long seconds);
 
 void fastMemcpy(void* ptrDest, void* ptrSrc, size_t nBytes);
 
+void fastStrCopy(char* buffer, std::size_t buffersize, const std::string& str);
 #endif // UTILS_H

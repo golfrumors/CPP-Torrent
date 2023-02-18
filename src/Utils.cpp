@@ -5,6 +5,7 @@
 #include <cmath>
 #include <string>
 #include <bitset>
+#include <stdio.h>
 
 //AVX intrinsic functions header
 #include <immintrin.h>
@@ -96,3 +97,9 @@ int bytesToInt(std::string bytes) {
 	return result;
 }
 
+//fast string copy
+void fastStrCopy(char* buffer, std::size_t buffersize, const std::string& str) {
+	std::size_t len = std::min(buffersize - 1, str.size());
+	std::memcpy(buffer, &str[0], len);
+	buffer[len] = '\0';
+}
