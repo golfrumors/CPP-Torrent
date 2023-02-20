@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 
 set(CMAKE_CXX_COMPILER "g++")
 
-project(TorrentClient VERSION 1.0.0 LANGUAGE CXX)
+project(TorrentClient VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 include_directories(lib)
@@ -46,6 +46,8 @@ add_executable(TorrentClient src/main.cpp
                              src/BitTorrentMessage.cpp 
                              src/PieceManager.cpp 
                              src/Piece.cpp
+							 src/Sha.cpp
+							 include/Sha.h
                              include/TorrentFileParser.h 
                              include/PeerRetriever.h
                              include/utils.h
