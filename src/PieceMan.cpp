@@ -6,6 +6,7 @@
 #include <bencode/bencoding.h>
 #include <iomanip>
 #include <unistd.h>
+#include <sys/socket.h>
 
 #include "../include/PieceMan.h"
 #include "../include/Block.h"
