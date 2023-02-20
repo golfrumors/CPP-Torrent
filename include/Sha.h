@@ -8,7 +8,7 @@ class SHA {
 	public:
 		SHA();
 		void update(const std::string& string);
-		void updaate(std::ifstream& inFile);
+		void update(std::ifstream& inFile);
 		std::string final();
 		static std::string fromFile(const std::string& filename);
 
@@ -31,6 +31,6 @@ class SHA {
 		static void read(std::ifstream& is, std::string& string, int max);
 };
 
-std::strirng toSha(const std::string& string);
+std::string toSha(const std::string& string);
 
 #endif
