@@ -63,7 +63,7 @@ int createConnection(const std::string& ip, const int port) {
 
     if(select(sock + 1, NULL, &fdset, NULL, &tv) == 1) {
         int socket_error;
-        socklen_t length = sizeof so_error;
+        socklen_t length = sizeof socket_error;
 
         getsockopt(sock, SOL_SOCKET, SO_ERROR, &socket_error, &length);
 
