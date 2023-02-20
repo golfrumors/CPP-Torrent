@@ -37,25 +37,25 @@ else()
 endif()
 
 add_executable(TorrentClient src/main.cpp 
-                             src/TorrentFileParser.cpp 
-                             src/PeerRetriever.cpp 
-                             src/utils.cpp 
-                             src/PeerConnection.cpp 
-                             src/connect.cpp   
+                             src/TorrentParser.cpp 
+                             src/PeerRet.cpp 
+                             src/Utils.cpp 
+                             src/PeerConn.cpp 
+							 src/Connect.cpp   
                              src/TorrentClient.cpp 
-                             src/BitTorrentMessage.cpp 
-                             src/PieceManager.cpp 
+                             src/BitMessage.cpp 
+                             src/PieceMan.cpp 
                              src/Piece.cpp
 							 src/Sha.cpp
 							 include/Sha.h
-                             include/TorrentFileParser.h 
-                             include/PeerRetriever.h
-                             include/utils.h
-                             include/PeerConnection.h
-                             include/connect.h
+                             include/TorrentParser.h 
+                             include/PeerRet.h
+                             include/Utils.h
+                             include/PeerConn.h
+							 include/Connect.h
                              include/TorrentClient.h
-                             include/BitTorrentMessage.h
-                             include/PieceManager.h
+                             include/BitMessage.h
+                             include/PieceMan.h
                              include/Piece.h
                              include/Block.h 
                              include/SharedQueue.h)
