@@ -54,4 +54,4 @@ private:
 
 std::string sha1(const std::string &string);
 
-#endif //BITTORRENTCLIENT_SHA1_H
+#endif //SHA1_H
