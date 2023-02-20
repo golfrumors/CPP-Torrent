@@ -19,7 +19,7 @@ SHA::SHA() {
 }
 
 void SHA::update(const std::string& val) {
-	std::istringstream is(s);
+	std::istringstream is(val);
 	update(is);
 }
 

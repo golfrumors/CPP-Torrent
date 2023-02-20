@@ -8,7 +8,7 @@ class SHA {
 	public:
 		SHA();
 		void update(const std::string& string);
-		void update(std::ifstream& inFile);
+		void update(std::istream& is);
 		std::string final();
 		static std::string fromFile(const std::string& filename);
 

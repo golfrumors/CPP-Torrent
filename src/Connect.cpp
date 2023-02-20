@@ -96,13 +96,13 @@ void sendData(const int sock, const std::string& data) {
         throw std::runtime_error("Failed to send data");
 }
 
-std::string receiveData(const inst sock, uint32_t bufferSize) {
+std::string receiveData(const int sock, uint32_t bufferSize) {
     std::string ans;
 
     if (!bufferSize) {
         struct pollfd fds;
         int ret;
-        fd.fd = sock;
+        fds.fd = sock;
         fd.events = POLLIN;
         ret = poll(&fds, 1, READING_TIMEOUT);
 
