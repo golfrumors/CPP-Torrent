@@ -7,9 +7,9 @@
 #include <iomanip>
 #include <unistd.h>
 
-#include "include/PieceMan.h"
-#include "include/Block.h"
-#include "include/Utils.h"
+#include "../include/PieceMan.h"
+#include "../include/Block.h"
+#include "../include/Utils.h"
 
 #define BLOCK_SZ 16384
 #define PENDING_TIME 5
