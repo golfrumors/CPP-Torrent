@@ -2,7 +2,7 @@
 #define SHA_h
 
 #include <string>
-#include <iostream
+#include <iostream>
 
 class SHA {
 	public:

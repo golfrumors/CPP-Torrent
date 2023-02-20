@@ -3,7 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <loguru/loguru.hpp>
-#include <bencode/bencode.h>
+#include <bencode/bencoding.h>
 #include <iomanip>
 #include <unistd.h>
 
