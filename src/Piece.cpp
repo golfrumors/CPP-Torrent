@@ -7,10 +7,10 @@
 #include <cassert>
 
 #include <loguru/loguru.hpp>
-#include <crypto/sha1.h>
 
-#include "include/Piece.h"
-#include "include/Utils.h"
+#include "../include/Sha.h"
+#include "../include/Piece.h"
+#include "../include/Utils.h"
 
 Piece::Piece(int index, std::vector<Block*> blocks, std::string hashValue) :
     index(index), _hashValue(std::move(hashValue)) {

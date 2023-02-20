@@ -4,11 +4,11 @@
 #include <bencode/bencoding.h>
 #include <loguru/loguru.hpp>
 
-#include "include/TorrentClient.h"
-#include "include/PieceMan.h"
-#include "include/TorrentParser.h"
-#include "include/PeerRet.h"
-#include "include/PeerConn.h"
+#include "../include/TorrentClient.h"
+#include "../include/PieceMan.h"
+#include "../include/TorrentParser.h"
+#include "../include/PeerRet.h"
+#include "../include/PeerConn.h"
 
 #define PORT 8080
 #define PEER_QUER_INT 60

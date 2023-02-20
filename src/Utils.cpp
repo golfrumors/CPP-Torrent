@@ -10,7 +10,7 @@
 //AVX intrinsic functions header
 #include <immintrin.h>
 
-#include "include/Utils.h"
+#include "../include/Utils.h"
 
 //fast memory copy util func, only available on AVX2 compliant cpus
 void fastMemcpy(void* ptrDest, void* ptrSrc, size_t nBytes) {

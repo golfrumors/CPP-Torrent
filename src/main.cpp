@@ -3,7 +3,7 @@
 #include <map>
 #include <cxxopts/cxxopts.hpp>
 
-#include "include/TorrentClient.h"
+#include "../include/TorrentClient.h"
 
 int main(int argc, const char* argv[]) {
 	cxxopts::Options options("TorrentClient", "Multi-threaded torrent client in C++");

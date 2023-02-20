@@ -8,8 +8,8 @@
 #include <bencode/bencoding.h>
 #include <loguru/loguru.hpp>
 
-#include "include/Sha.h"
-#include "include/TorrentParser.h"
+#include "../include/Sha.h"
+#include "../include/TorrentParser.h"
 
 #define HASH_LENGTH 20
 

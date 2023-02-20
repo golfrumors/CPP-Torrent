@@ -13,8 +13,8 @@
 
 #include <loguru/loguru.hpp>
 
-#include "include/Connect.h"
-#include "include/Utils.h"
+#include "../include/Connect.h"
+#include "../include/Utils.h"
 
 #define CONN_TIMEOUT 5
 #define READING_TIMEOUT 3000

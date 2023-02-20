@@ -1,4 +1,4 @@
-#include "Sha.h"
+#include "../include/Sha.h"
 #include <sstream>
 #include <iomanip>
 #include <fstream>

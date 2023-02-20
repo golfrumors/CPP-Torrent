@@ -10,8 +10,8 @@
 #include <malloc.h>
 
 #include "../include/PeerConn.h"
-#include "include/Utils.h"
-#include "include/Connect.h"
+#include "../include/Utils.h"
+#include "../include/Connect.h"
 
 #include <loguru/loguru.hpp>
 
