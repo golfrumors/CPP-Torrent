@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <string>
+
 std::string urlEncode(const std::string& value);
 
 std::string hexDecode(const std::string& hex);
