@@ -17,7 +17,7 @@ class TorrentParser {
         std::vector<std::string> splitPieceHashes() const;
 
     private:
-        std::sharedptr<bencoding::BDictionary> _root;
+        std::shared_ptr<bencoding::BDictionary> _root;
 };
 
 #endif // TORRENTPARSER_H

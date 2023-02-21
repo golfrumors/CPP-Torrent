@@ -103,7 +103,7 @@ std::string receiveData(const int sock, uint32_t bufferSize) {
         struct pollfd fds;
         int ret;
         fds.fd = sock;
-        fd.events = POLLIN;
+        fds.events = POLLIN;
         ret = poll(&fds, 1, READING_TIMEOUT);
 
         long bytesRead;

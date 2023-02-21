@@ -1,5 +1,5 @@
 #ifndef SHA_H
-#define SHA_h
+#define SHA_H
 
 #include <string>
 #include <iostream>
@@ -27,8 +27,8 @@ class SHA {
 		void reset();
 		void transform(uint32 block[BLOCK_BYTES]);
 
-		static void bufferToBlock(const std::string& buffer, uint32 block[BLOCK_BYTES]);
-		static void read(std::ifstream& is, std::string& string, int max);
+		static void bufferToBlock(const std::string &buffer, uint32 block[BLOCK_BYTES]);
+		static void read(std::istream &is, std::string& string, int max);
 };
 
 std::string toSha(const std::string& string);

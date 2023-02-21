@@ -2,6 +2,7 @@
 #define PIECE_H
 
 #include "Block.h"
+#include <vector>
 
 class Piece {
     public:

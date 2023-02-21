@@ -32,7 +32,7 @@ std::string urlEncode(const std::string& value) {
 	escaped.fill('0');
 	escaped << std::hex;
 	for(char c : value) {
-		if(isalnum(c) || == '-' || c == '_' || c == '.' || c == '~'){
+		if(isalnum(c) == '-' || c == '_' || c == '.' || c == '~'){
 			escaped << c;
 			continue;
 		}

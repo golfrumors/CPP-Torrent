@@ -15,24 +15,24 @@
 
 TorrentParser::TorrentParser(const std::string& filePth) {
 	LOG_F(INFO, "Parsing file %s...", filePth.c_str());
-	std::ifstream fileStream(filePt, std::ifstream::binary);
+	std::ifstream fileStream(filePth, std::ifstream::binary);
 	std::shared_ptr<bencoding::BItem> decodedTorFile = bencoding::decode(fileStream);
 	std::shared_ptr<bencoding::BDictionary> rootDiict = std::dynamic_pointer_cast<bencoding::BDictionary>(decodedTorFile);
 
-	root = rootDict;
+	_root = rootDiict;
 
 	LOG_F(INFO, "Parsing file %s... Done", filePth.c_str());
 }
 
 std::shared_ptr<bencoding::BItem> TorrentParser::get(std::string key) const {
-	std::shared_ptr<bencoding::BItem> value = root->getValue(key);
+	std::shared_ptr<bencoding::BItem> value = _root->getValue(key);
 	return value;
 }
 
 std::string TorrentParser::getInfoHash() const {
 	std::shared_ptr<bencoding::BItem> infDict = get("info");
 	std::string infString = bencoding::encode(infDict);
-	std::string shaHash = sha(infString);
+	std::string shaHash = toSha(infString);
 	return shaHash;
 }
 
@@ -42,7 +42,7 @@ std::vector<std::string> TorrentParser::splitPieceHashes() const {
 	if(!piecesVal)
 		throw std::runtime_error("No pieces key in torrent file");
 
-	std::string piecesStr = std::dynamic_pointer_cast<bencoding::BString>(piecesVal)->getValue();
+	std::string piecesStr = std::dynamic_pointer_cast<bencoding::BString>(piecesVal)->value();
 
 	std::vector<std::string> pieceHashes;
 
@@ -51,7 +51,7 @@ std::vector<std::string> TorrentParser::splitPieceHashes() const {
 	pieceHashes.reserve(numPieces);
 
 	for(int i = 0; i < numPieces; i++) {
-		pieceHashes.push_back(pieces.substr(i * HASH_LENGTH, HASH_LENGTH));
+		pieceHashes.push_back(piecesStr.substr(i * HASH_LENGTH, HASH_LENGTH));
 	}
 
 	return pieceHashes;
@@ -66,7 +66,7 @@ long TorrentParser::getFileSize() const {
 	return fileSize;
 }
 
-long TorrentParser::getPieceLength() const {
+long TorrentParser::getPieceLen() const {
 	std::shared_ptr<bencoding::BItem> pieceLengthItem = get("piece length");
 	if(!pieceLengthItem)
 		throw std::runtime_error("No piece length key in torrent file");
@@ -80,7 +80,7 @@ std::string TorrentParser::getFileName() const {
 	if(!fileNameItem)
 		throw std::runtime_error("No name key in torrent file");
 
-	std::string fileName = std::dynamic_pointer_cast<bencoding::BString>(fileNameItem)->getValue();
+	std::string fileName = std::dynamic_pointer_cast<bencoding::BString>(fileNameItem)->value();
 	return fileName;
 }
 
@@ -88,6 +88,6 @@ std::string TorrentParser::getAnnounce() const {
 	std::shared_ptr<bencoding::BItem> announceItem = get("announce");
 	if(!announceItem)
 		throw std::runtime_error("No announce key in torrent file");
-	std::string announce = std::dynamic_pointer_cast<bencoding::BString>(announceItem)->getValue();
+	std::string announce = std::dynamic_pointer_cast<bencoding::BString>(announceItem)->value();
 	return announce;
 }

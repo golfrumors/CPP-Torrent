@@ -21,47 +21,47 @@ PieceManager::PieceManager(
 		const TorrentParser& fileParse,
 		const std::string& dwnPath,
 		const int maxConn
-): fileParser(fileParse), maxConn(maxConn), pieceLength(fileParse.getPieceLen())
+): _fileParser(fileParse), _maxConn(maxConn), _pieceLen(fileParse.getPieceLen())
 {
-	missingPieces = initiatePieceS();
+	_missingPieces = initiatePieces();
 
-	downloadedFile.open(dwnPath, std::ios::binary | std::ios::out);
-	downloadedFile.seekp(fileParse.getFileSize() - 1);
-	downloadedFile.write("", 1);
+	_downloadedFile.open(dwnPath, std::ios::binary | std::ios::out);
+	_downloadedFile.seekp(fileParse.getFileSize() - 1);
+	_downloadedFile.write("", 1);
 
-	startingTime = std::time(nullptr);
+	_startTime = std::time(nullptr);
 	std::thread progressThread([this] {this->trackProgress();});
 
 	progressThread.detach();
 }
 
 PieceManager::~PieceManager() {
-	for (Piece* piece : missingPieces)
+	for (Piece* piece : _missingPieces)
 		delete piece;
 
-	for (Piece* piece : ongoingPiece)
+	for (Piece* piece : _ongoingPieces)
 		delete piece;
 
-	for (PendingRequest* req : pendingRequests)
+	for (PendingReq* req : _pendingReqs)
 		delete req;
 
-	downloadedFile.close();
+	_downloadedFile.close();
 }
 
 std::vector<Piece*> PieceManager::initiatePieces() {
-	std::vector<std::string> pieceHashes = fileParser.splitPieceHashes();
-	numPieces = pieceHashes.size();
+	std::vector<std::string> pieceHashes = _fileParser.splitPieceHashes();
+	_totalPieces = pieceHashes.size();
 	std::vector<Piece*> torPieces;
-	missingPieces.reserve(numPieces);
+	_missingPieces.reserve(_totalPieces);
 
-	long totalLen = fileParser.getFileSize();
+	long totalLen = _fileParser.getFileSize();
 
-	int blockCount = ceil(pieceLength / BLOCK_SZ);
-	long remLen = pieceLength;
+	int blockCount = ceil(_pieceLen / BLOCK_SZ);
+	long remLen = _pieceLen;
 
-	for(int i = 0; i < totalPieces; i++) {
-		if(i == totalPieces - 1) {
-			remLen = totalLen % pieceLength;
+	for(int i = 0; i < _totalPieces; i++) {
+		if(i == _totalPieces - 1) {
+			remLen = totalLen % _pieceLen;
 			blockCount = std::max((int) ceil(remLen / BLOCK_SZ), 1);
 		}
 
@@ -76,7 +76,7 @@ std::vector<Piece*> PieceManager::initiatePieces() {
 			
 			int blockSz = BLOCK_SZ;
 
-			if (i == totalPieces - 1 && off == blockCount - 1)
+			if (i == _totalPieces - 1 && off == blockCount - 1)
 				blockSz = remLen % BLOCK_SZ;
 
 			block->length = blockSz;
@@ -91,83 +91,83 @@ std::vector<Piece*> PieceManager::initiatePieces() {
 	return torPieces;
 }
 
-bool PieceManager::isComplete() {
-	lock.lock();
-	bool isComplete = havePieces.size() == totalPieces;
-	lock.unlock();
-	return isComplete;
+bool PieceManager::complete() {
+	_lock.lock();
+	bool completed = _completedPieces.size() == _totalPieces;
+	_lock.unlock();
+	return completed;
 }
 
 void PieceManager::addPeer(const std::string& peerID, std::string bitField) {
-	lock.lock();
-	peers[peerID] = bitField;
-	lock.unlock();
+	_lock.lock();
+	_peers[peerID] = bitField;
+	_lock.unlock();
 	std::stringstream inf;
 	inf << "Num of cons: " <<
-		std::to_string(peers.size()) << "/" << std::to_string(maxConn);
+		std::to_string(_peers.size()) << "/" << std::to_string(_maxConn);
 	LOG_F(INFO, "%s",inf.str().c_str());
 }
 
 void PieceManager::updatePeer(const std::string& peerID, int ind) {
-	lock.lock();
-	if(peers.find(peerID) != peers.end()) {
-		setPiece(peers[peerID],ind);
-		lock.unlock();
+	_lock.lock();
+	if(_peers.find(peerID) != _peers.end()) {
+		setPiece(_peers[peerID],ind);
+		_lock.unlock();
 	} else { 
-		lock.unlock();
+		_lock.unlock();
 		throw std::runtime_error("Connection failed with peer " + peerID);
 	}
 }
 
 void PieceManager::removePeer(const std::string& peerID) {
-	if(isComplete())
+	if(complete())
 		return;
-	lock.lock();
-	auto it = peers.find(peerID);
-	if (it != peers.end()) {
-		peers.erase(it);
-		lock.unlock();
-		std:stringstream inf;
+	_lock.lock();
+	auto it = _peers.find(peerID);
+	if (it != _peers.end()) {
+		_peers.erase(it);
+		_lock.unlock();
+		std::stringstream inf;
 		inf << "Num of cons: " <<
-			std::to_string(peers.size()) << "/" << std::to_string(maxConn);
+			std::to_string(_peers.size()) << "/" << std::to_string(_maxConn);
 		LOG_F(INFO, "%s", inf.str().c_str());
 	} else {
-		lock.unlock();
+		_lock.unlock();
 		throw std::runtime_error("Trying to remove a peer: " + peerID + " that doesn't exist");
 	}
 }
 
-Block* PieceManager::nextRequest(std::string peerID){
-	lock.lock();
-	if(missingPieces.empty()) {
-		lock.unlock();
+Block* PieceManager::nextReq(std::string peerID){
+	_lock.lock();
+	if(_missingPieces.empty()) {
+		_lock.unlock();
 		return nullptr;
 	}
 
-	if(peers.find(peerID) == peers.end()) {
-		lock.unlock();
+	if(_peers.find(peerID) == _peers.end()) {
+		_lock.unlock();
 		return nullptr;
 	}
 
-	Block* block = expiredRequest(peerID);
+	Block* block = expiredReq(peerID);
 	if(!block) {
 		block = nextOngoing(peerID);
 		if(!block)
 			block = getRarestPiece(peerID)->nextRequest();
 	}
 
-	lock.unlock();
+	_lock.unlock();
 
 	return block;
 }
 
-Block* PieceManager::expiredRequest(std::string peerID) {
+Block* PieceManager::expiredReq(std::string peerID) {
 	time_t curr = std::time(nullptr);
 
-	for(auto it = pendingRequests.begin(); it != pendingRequests.end(); it++) {
+	for(auto it = _pendingReqs.begin(); it != _pendingReqs.end(); it++) {
 		if((*it)->peerID == peerID && curr - (*it)->time > PENDING_TIME) {
 			Block* block = (*it)->block;
-			pendingRequests.erase(it);
+			_pendingReqs.erase(it);
 			return block;
 		}
 	}
@@ -176,7 +176,7 @@ Block* PieceManager::expiredRequest(std::string peerID) {
 }
 
 Block* PieceManager::nextOngoing(std::string peerID) {
-	for(auto it = ongoingPiece.begin(); it != ongoingPiece.end(); it++) {
+	for(auto it = _ongoingPieces.begin(); it != _ongoingPieces.end(); it++) {
 		if((*it)->hasPeer(peerID)) {
 			Block* block = (*it)->nextRequest();
 			if(block)
@@ -191,10 +191,10 @@ Piece* PieceManager::getRarestPiece(std::string peerID) {
 	std::vector<Piece*> rarestPieces;
 	int rarestCount = INT_MAX;
 
-	for(Piece* piece : missingPieces) {
+	for(Piece* piece : _missingPieces) {
 		if(piece->hasPeer(peerID)) {
 			int count = 0;
-			for(auto it = peers.begin(); it != peers.end(); it++) {
+			for(auto it = _peers.begin(); it != _peers.end(); it++) {
 				if(it->first != peerID && piece->hasPeer(it->first))
 					count++;
 			}
@@ -251,13 +251,13 @@ void PieceManager::blockReceived(std::string peerID, int pieceInd, int blockOff,
 				std::remove(ongoingPieces.begin(), ongoingPieces.end(), targetPiece),
 				ongoingPieces.end());
 
-			havePieces.push_back(targetPiece);
+			_completedPieces.push_back(targetPiece);
 			piecesDownloadedInInterval++;
 			lock.unlock();
 
 			std::stringstream inf;
-			inf << "(" << std::fixed << std::setprecision(2) << (((float) havePieces.size()) / (float) totalPieces * 100) << "%) ";
-			inf << std::to_string(havePieces.size()) + " / " + std::to_string(totalPieces) + " pieces downloaded";
+			inf << "(" << std::fixed << std::setprecision(2) << (((float) _completedPieces.size()) / (float) totalPieces * 100) << "%) ";
+			inf << std::to_string(_completedPieces.size()) + " / " + std::to_string(totalPieces) + " pieces downloaded";
 			LOG_F(INFO, "%s", inf.str().c_str());
 		} else {
 			targetPiece->reset();
@@ -275,7 +275,7 @@ void PieceManager::write(Piece* piece) {
 
 unsigned long PieceManager::bytesDownloaded() {
 	lock.lock();
-	unsigned long bytesDownloaded = havePieces.size() * pieceLength();
+	unsigned long bytesDownloaded = _completedPieces.size() * pieceLength();
 	lock.unlock();
 	return bytesDownloaded;
 }
@@ -292,7 +292,7 @@ void PieceManager::trackProgress() {
 void PieceManager::displayProgressBar() {
 	std::stringstream inf;
 	lock.lock();
-	unsigned long downloadedPieces = havePieces.size();
+	unsigned long downloadedPieces = _completedPieces.size();
 	unsigned long downloadedLen = pieceLength * piecesDownloadedInInterval;
 
 	double avgDownloadSpeed = (double) downloadedLen / (double) PROGRESS_INTERVAL;

@@ -2,6 +2,7 @@
 #define PEERRETRIEVER_H
 
 #include <vector>
+#include <string>
 #include <cpr/cpr.h>
 
 //representation of peers retrieved from tracker
@@ -23,6 +24,6 @@ class PeerRetriever{
         int _port;
         const unsigned long _fileSize;
         std::vector<Peer*> decodeResponse(std::string response);
-}
+};
 
 #endif // PEERRETRIEVER_H

@@ -1,6 +1,8 @@
 #ifndef BLOCK_H
 #define BLOCK_H
 
+#include <string>
+
 enum BlockStat {
     missing = 0,
     pending = 1,

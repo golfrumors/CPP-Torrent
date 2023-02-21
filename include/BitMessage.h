@@ -1,6 +1,9 @@
 #ifndef BITMESSAGE_H
 #define BITMESSAGE_H
 
+#include <stdint.h>
+#include <string>
+
 enum MessageId {
     keepAlive = -1,
     choke = 0,

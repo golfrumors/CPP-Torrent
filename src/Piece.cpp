@@ -54,7 +54,7 @@ bool Piece::isCompleted() {
 
 bool Piece::isHashValid() {
     std::string data = getData();
-    std::string hash = hexDecode(sha1(data));
+    std::string hash = hexDecode(toSha(getData()));
     return hash == _hashValue;
 }
 

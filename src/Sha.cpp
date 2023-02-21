@@ -51,7 +51,7 @@ std::string SHA::final(){
 
 	if(originalSize > BLOCK_BYTES - 8) {
 		transform(block);
-		for(usigned int i = 0; i < BLOCK_INTS - 2; i++){ 
+		for(unsigned int i = 0; i < BLOCK_INTS - 2; i++){ 
 			block[i] = 0;
 		}
 	}
@@ -130,18 +130,18 @@ void SHA::transform(uint32 block[BLOCK_BYTES]) {
 
 void SHA::bufferToBlock(const std::string& buff, uint32 block[BLOCK_BYTES]){
 	for (unsigned int i = 0; i < BLOCK_INTS; i++) {
-		block[i] = (buffer[4*i+3] & 0xff) | (buffer[4*i+2] & 0xff) << 8
-			| (buffer[4*i+1] & 0xff) << 16 | (buffer[4*i+0] & 0xff) << 24;
+		block[i] = (buff[4*i+3] & 0xff) | (buff[4*i+2] & 0xff) << 8
+			| (buff[4*i+1] & 0xff) << 16 | (buff[4*i+0] & 0xff) << 24;
 	}
 }
 
 void SHA::read(std::istream& inStream, std::string& str, int max) {
 	char sbuf[max];
-	is.read(sbuf, max);
-	s.assign(sbuf, is.gcount());
+	inStream.read(sbuf, max);
+	str.assign(sbuf, inStream.gcount());
 }
 
-std::string SHA::toSha(const std::string& str) {
+std::string toSha(const std::string& str) {
 	SHA checksum;
 	checksum.update(str);
 	return checksum.final();
