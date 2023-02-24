@@ -63,8 +63,8 @@ void PeerConnection::start() {
                         case piece: {
                             _requestPending = false;
                             std::string payload = msg.getPayload();
-                            int pieceIndex = bytesToInteger(payload.substr(0, 4));
-                            int blockOffset = bytesToInteger(payload.substr(4, 4));
+                            int pieceIndex = bytesToInt(payload.substr(0, 4));
+                            int blockOffset = bytesToInt(payload.substr(4, 4));
                             std::string blockData = payload.substr(8);
                             _pieceManager->blockReceived(_peerID, pieceIndex, blockOffset, blockData);
                             break;
@@ -72,7 +72,7 @@ void PeerConnection::start() {
 
                         case have: {
                             std::string payload = msg.getPayload();
-                            int pieceIndex = bytesToInteger(payload);
+                            int pieceIndex = bytesToInt(payload);
                             _pieceManager->updatePeer(_peerID, pieceIndex);
                             break;
                         }
@@ -169,7 +169,8 @@ void PeerConnection::sendRequest() {
     //make sure the memory is aligned properly beforehand
     size_t alignment = 32;
     const size_t payLoadSize = 12;
-    char* tmp[payLoadSize] = (char*)memalign(alignment, payLoadSize);
+    char* tmp[payLoadSize + 1] = {};
+    tmp[payLoadSize] = (char*)memalign(alignment, payLoadSize);
 
     //convert little endian to big endian
     uint32_t pieceIndex = htonl(block->piece);
@@ -189,7 +190,7 @@ void PeerConnection::sendRequest() {
 
     std::string payload;
     for(int i = 0; i < payLoadSize; i++) {
-        payload += (char) tmp[i];
+        payload +=  tmp[i];
     }
 
     std::stringstream ss;
@@ -209,7 +210,7 @@ void PeerConnection::sendRequest() {
     LOG_F(INFO, "Request sent to peer [%s], success!", _peer->ip.c_str());
 
     //dealloc
-    free(tmp);
+    //free(tmp);
 }
 
 void PeerConnection::sendInterested() {

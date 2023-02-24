@@ -6,6 +6,7 @@
 #include <string>
 #include <bitset>
 #include <stdio.h>
+#include <string.h>
 
 //AVX intrinsic functions header
 #include <immintrin.h>
@@ -89,17 +90,36 @@ void setPiece(std::string& bitfield, int pieceIndex) {
 
 //bytesToInteger from string using bitwise operation to convert
 int bytesToInt(std::string bytes) {
-	int result = 0;
-	for (int i = 0; i < 4; i++) {
-		result = (result << 8) + (unsigned char)bytes[i];
-	}
-
-	return result;
+	std::string binStr;
+    long byteCount = bytes.size();
+    for (int i = 0; i < byteCount; i++)
+        binStr += std::bitset<8>(bytes[i]).to_string();
+    return stoi(binStr, 0, 2);
 }
 
 //fast string copy
 void fastStrCopy(char* buffer, std::size_t buffersize, const std::string& str) {
 	std::size_t len = std::min(buffersize - 1, str.size());
-	std::memcpy(buffer, &str[0], len);
+	memcpy(buffer, &str[0], len);
 	buffer[len] = '\0';
+}
+
+std::string formatTime(long seconds) {
+	if (seconds < 0)
+		return "inf";
+
+	std::string result;
+    std::string h = std::to_string(seconds / 3600);
+    std::string m = std::to_string((seconds % 3600) / 60);
+    std::string s = std::to_string(seconds % 60);
+    std::string hh = std::string(2 - h.length(), '0') + h;
+    std::string mm = std::string(2 - m.length(), '0') + m;
+    std::string ss = std::string(2 - s.length(), '0') + s;
+    if (hh.compare("00") != 0) {
+        result = hh + ':' + mm + ":" + ss;
+    }
+    else {
+        result =  mm + ":" + ss;
+    }
+    return result;
 }

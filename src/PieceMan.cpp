@@ -1,4 +1,6 @@
 #include <cmath>
+#include <climits>
+#include <cstdint>
 #include <ctime>
 #include <iostream>
 #include <algorithm>
@@ -162,153 +164,163 @@ Block* PieceManager::nextReq(std::string peerID){
 }
 
 Block* PieceManager::expiredReq(std::string peerID) {
-	time_t curr = std::time(nullptr);
-
-	for(auto it = _pendingReqs.begin(); it != _pendingReqs.end(); it++) {
-		if((*it)->peerID == peerID && curr - (*it)->time > PENDING_TIME) {
-			Block* block = (*it)->block;
-			_pendingReqs.erase(it);
-			return block;
+	time_t currTime = std::time(nullptr);
+	for(PendingReq* pending : _pendingReqs) {
+		if(hasPiece(_peers[peerID], pending->block->piece)) {
+			auto diff = std::difftime(currTime, pending->timeStamp);
+			if(diff >= PENDING_TIME) {
+				pending->timeStamp = currTime;
+				LOG_F(INFO, "Block %d has expired", pending->block->offset, pending->block->piece);
+				return pending->block;
+			}
 		}
 	}
-
 	return nullptr;
 }
 
 Block* PieceManager::nextOngoing(std::string peerID) {
-	for(auto it = _ongoingPieces.begin(); it != _ongoingPieces.end(); it++) {
-		if((*it)->hasPeer(peerID)) {
-			Block* block = (*it)->nextRequest();
-			if(block)
+	for(Piece* piece : _ongoingPieces) {
+		if(hasPiece(_peers[peerID], piece->index)) {
+			Block* block = piece->nextRequest();
+			if(block) {
+				auto currTime = std::time(nullptr);
+				auto newPendingReq = new PendingReq;
+				newPendingReq->block = block;
+				newPendingReq->timeStamp = std::time(nullptr);
+				_pendingReqs.push_back(newPendingReq);
 				return block;
+			}
 		}
 	}
-
 	return nullptr;
 }
 
 Piece* PieceManager::getRarestPiece(std::string peerID) {
-	std::vector<Piece*> rarestPieces;
-	int rarestCount = INT_MAX;
+	auto comp = [](const Piece* a, const Piece* b) {return a->index < b->index; };
+	std::map<Piece*, int, decltype(comp)> pieceCount(comp);
 
 	for(Piece* piece : _missingPieces) {
-		if(piece->hasPeer(peerID)) {
-			int count = 0;
-			for(auto it = _peers.begin(); it != _peers.end(); it++) {
-				if(it->first != peerID && piece->hasPeer(it->first))
-					count++;
-			}
-
-			if(count < rarestCount) {
-				rarestPieces.clear();
-				rarestPieces.push_back(piece);
-				rarestCount = count;
-			} else if(count == rarestCount) {
-				rarestPieces.push_back(piece);
-			}
+		if (_peers.find(peerID) != _peers.end()) {
+			if (hasPiece(_peers[peerID], piece->index))
+				pieceCount[piece] += 1;
 		}
 	}
 
-	return rarestPieces[rand() % rarestPieces.size()];
+	Piece* rarest;
+	int leastCount = INT16_MAX;
+	for(auto const& [piece, count] : pieceCount) {
+		if(count < leastCount) {
+			leastCount = count;
+			rarest = piece;
+		}
+	}
+
+	_missingPieces.erase(
+		std::remove(_missingPieces.begin(), _missingPieces.end(), rarest),
+		_missingPieces.end()
+	);
+
+	_ongoingPieces.push_back(rarest);
+	return rarest;
 }
 
 void PieceManager::blockReceived(std::string peerID, int pieceInd, int blockOff, std::string data) {
 	LOG_F(INFO, "Block %d received from %s", blockOff, peerID.c_str());
 
-	PendingRquest* pendingToRem = nullptr;
-	lock.lock();
-	for(PendingRequest* pending : pendingRequests) {
+	PendingReq* pendingToRem = nullptr;
+	_lock.lock();
+	for(PendingReq* pending : _pendingReqs) {
 		if(pending->block->piece == pieceInd && pending->block->offset == blockOff) {
 			pendingToRem = pending;
 			break;
 		}
 	}
 
-	pendingRequests.erase(
-			std::remove(pendingRequests.begin(), pendingRequests.end(), pendingToRem),
-			pendingRequests.end());
+	_pendingReqs.erase(
+			std::remove(_pendingReqs.begin(), _pendingReqs.end(), pendingToRem),
+			_pendingReqs.end());
 	
 	Piece* targPiece = nullptr;
-	for(Piece* piece : ongoingPiece) {
+	for(Piece* piece : _ongoingPieces) {
 		if(piece->index == pieceInd) {
-			targetPiece = piece;
+			targPiece = piece;
 			break;
 		}
 	}
 
-	lock.unlock();
-	if(!targetPiece)
+	_lock.unlock();
+	if(!targPiece)
 		throw std::runtime_error("Received block for a piece that is not ongoing");
 
-	targetPiece->blockReceived(blockOffset, std::move(data));
+	targPiece->blockReceived(blockOff, std::move(data));
 
-	if(targetPiece->isComplete()) {
-		if(targetPiece->isHashMatch()) {
-			write(targetPiece);
+	if(targPiece->isCompleted()) {
+		if(targPiece->isHashValid()) {
+			write(targPiece);
 
-			lock.lock();
-			ongoingPieces.erase(
-				std::remove(ongoingPieces.begin(), ongoingPieces.end(), targetPiece),
-				ongoingPieces.end());
+			_lock.lock();
+			_ongoingPieces.erase(
+				std::remove(_ongoingPieces.begin(), _ongoingPieces.end(), targPiece),
+				_ongoingPieces.end());
 
-			_completedPieces.push_back(targetPiece);
-			piecesDownloadedInInterval++;
-			lock.unlock();
+			_completedPieces.push_back(targPiece);
+			_pieceDownloadInterval++;
+			_lock.unlock();
 
 			std::stringstream inf;
-			inf << "(" << std::fixed << std::setprecision(2) << (((float) _completedPieces.size()) / (float) totalPieces * 100) << "%) ";
-			inf << std::to_string(_completedPieces.size()) + " / " + std::to_string(totalPieces) + " pieces downloaded";
+			inf << "(" << std::fixed << std::setprecision(2) << (((float) _completedPieces.size()) / (float) _totalPieces * 100) << "%) ";
+			inf << std::to_string(_completedPieces.size()) + " / " + std::to_string(_totalPieces) + " pieces downloaded";
 			LOG_F(INFO, "%s", inf.str().c_str());
 		} else {
-			targetPiece->reset();
-			LOG_F(INFO, "Piece %d hash mismatch", targetPiece->index);
+			targPiece->reset();
+			LOG_F(INFO, "Piece %d hash mismatch", targPiece->index);
 		}	
 		
 	}
 }
 
 void PieceManager::write(Piece* piece) {
-	long position = piece->index * fileParser.getPieceLength();
-	downloadedFile.seekp(position);
-	downloadedFile << piece->getData();
+	long position = piece->index * _fileParser.getPieceLen();
+	_downloadedFile.seekp(position);
+	_downloadedFile << piece->getData();
 }
 
 unsigned long PieceManager::bytesDownloaded() {
-	lock.lock();
-	unsigned long bytesDownloaded = _completedPieces.size() * pieceLength();
-	lock.unlock();
+	_lock.lock();
+	unsigned long bytesDownloaded = _completedPieces.size() * _pieceLen;
+	_lock.unlock();
 	return bytesDownloaded;
 }
 
 void PieceManager::trackProgress() {
 	usleep(pow(10, 6));
-	while(!isComplete()) {
-		displayProgressBar();
-		piecesDownloadedInInterval = 0;
+	while(!complete()) {
+		displayProgress();
+		_pieceDownloadInterval = 0;
 		usleep(PROGRESS_INTERVAL * pow(10, 6));
 	}
 }
 
-void PieceManager::displayProgressBar() {
+void PieceManager::displayProgress() {
 	std::stringstream inf;
-	lock.lock();
+	_lock.lock();
 	unsigned long downloadedPieces = _completedPieces.size();
-	unsigned long downloadedLen = pieceLength * piecesDownloadedInInterval;
+	unsigned long downloadedLen = _pieceLen * _pieceDownloadInterval;
 
 	double avgDownloadSpeed = (double) downloadedLen / (double) PROGRESS_INTERVAL;
 	double avgDownloadSpeedMBS = avgDownloadSpeed / pow(10, 6);
 
-	inf << "Peers: " + std::to_string(peers.size()) + "/" + std::to_string(MAX_PEERS) + ", ";
+	inf << "Peers: " + std::to_string(_peers.size()) + "/" + std::to_string(_maxConn) + ", ";
 	inf << std::fixed << std::setprecision(2) << avgDownloadSpeedMBS << " MB/s, ";
 
-	double timePerPiece = (double) PROGRESS_INTERVAL / (double) piecesDownloadedInInterval;
-	long remTime = ceil(timePerPiece * (totalPieces - downloadedPieces));
+	double timePerPiece = (double) PROGRESS_INTERVAL / (double) _pieceDownloadInterval;
+	long remTime = ceil(timePerPiece * (_totalPieces - downloadedPieces));
 	inf << "ETA: " << formatTime(remTime) << "";
 
-	double prog = (double) downloadedPieces / (double) totalPieces;
-	int pos = PROGRESS_BAR_WIDTH * prog;
+	double prog = (double) downloadedPieces / (double) _totalPieces;
+	int pos = PROGRESS_WIDTH * prog;
 	inf << "[";
-	for(int i = 0; i < PROGRESS_BAR_WIDTH; i++) {
+	for(int i = 0; i < PROGRESS_WIDTH; i++) {
 		if(i < pos)
 			inf << "=";
 		else if(i == pos)
@@ -318,16 +330,16 @@ void PieceManager::displayProgressBar() {
 	}
 
 	inf << "] ";
-	inf << std::to_string(downloadedPieces) + "/" + std::to_string(totalPieces) + " ";
+	inf << std::to_string(downloadedPieces) + "/" + std::to_string(_totalPieces) + " ";
 	inf << "[" << std::fixed << std::setprecision(2) << (prog * 100) << "%] ";
 
 	time_t currTime = std::time(nullptr);
-	long timeFromStart = floor(std::difftime(currTime, startTime));
+	long timeFromStart = floor(std::difftime(currTime, _startTime));
 
 	inf << "in " << formatTime(timeFromStart);
 	std::cout << inf.str() <<"\r";
 	std::cout.flush();
-	lock.unlock();
-	if(isComplete())
+	_lock.unlock();
+	if(complete())
 		std::cout << std::endl;
 }

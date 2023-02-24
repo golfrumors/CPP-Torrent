@@ -13,7 +13,7 @@ bool hasPiece(const std::string& bitfield, int pieceIndex);
 
 void setPiece(std::string& bitfield, int pieceIndex);
 
-int bytesToInteger(const std::string& bytes);
+int bytesToInt(std::string bytes);
 
 std::string formatTime(long seconds);
 

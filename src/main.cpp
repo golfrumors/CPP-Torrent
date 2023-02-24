@@ -29,7 +29,7 @@ int main(int argc, const char* argv[]) {
 		bool enableLogging = parseOpts["logging"].as<bool>();
 		std::string logFile = parseOpts["log-file"].as<std::string>();
 
-		if(!parseOpts.count("torrent-file")) {
+		if(!parseOpts.count("torrent-file"))
 			throw std::invalid_argument("Torrent file not specified");
 
 		if(!parseOpts.count("output-dir")) 
@@ -38,8 +38,8 @@ int main(int argc, const char* argv[]) {
 		std::string torrentFile = parseOpts["torrent-file"].as<std::string>();
 		std::string outputDir = parseOpts["output-dir"].as<std::string>();
 		TorrentClient client(threadNums, enableLogging, logFile);
-		client.downloadTorrent(torrentFile, outputDir);
-	} catch (std::exceptiong& e) {
+		client.downloadFile(torrentFile, outputDir);
+	} catch (std::exception& e) {
 		std::cout << "Error parsing options: " << e.what() << std::endl;
 		return 1;
 	}

@@ -126,7 +126,7 @@ std::string receiveData(const int sock, uint32_t bufferSize) {
         for(char i : buffer)
             msgLenString += i;
 
-        uint32_t msgLen = bytesToInteger(msgLenString);
+        uint32_t msgLen = bytesToInt(msgLenString);
         bufferSize = msgLen;
     }
 

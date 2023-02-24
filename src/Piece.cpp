@@ -23,6 +23,12 @@ Piece::~Piece() {
     }
 }
 
+void Piece::reset()
+{
+    for (Block* block : blocks)
+        block->status = missing;
+}
+
 Block* Piece::nextRequest() {
     for (auto block : blocks) {
         if (block->status == missing) {

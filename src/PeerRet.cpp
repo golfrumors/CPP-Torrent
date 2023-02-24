@@ -5,6 +5,7 @@
 #include <bencode/bencoding.h>
 
 #include <string>
+#include <memory>
 #include <iostream>
 #include <cpr/cpr.h>
 #include <random>
@@ -29,7 +30,7 @@ std::vector<Peer*> PeerRetriever::getPeers(unsigned long bytesDown) {
     ss << "downloaded: " << bytesDown << "\n" << "left: " << std::to_string(_fileSize - bytesDown) << "\n";
     ss << "compact: " << std::to_string(1) << "\n" << "event: " << "started" << "\n";
 
-    LOG_F(INFO, "%s", info.str().c_str());
+    LOG_F(INFO, "%s", ss.str().c_str());
 
     cpr::Response res = cpr::Get(cpr::Url{_announceURL}, cpr::Parameters {
         {"info_hash", std::string(hexDecode(_infoHash))},
@@ -82,7 +83,7 @@ std::vector<Peer*> PeerRetriever::decodeResponse(std::string resp) {
             peerIP << std::to_string((uint8_t) peersString[offset + 2]) << ".";
             peerIP << std::to_string((uint8_t) peersString[offset + 3]);
 
-            int peerPort = bytesToInteger(peersString.substr(offset + 4, 2));
+            int peerPort = bytesToInt(peersString.substr(offset + 4, 2));
 
             Peer* newPeer = new Peer {peerIP.str(), peerPort};
             peers.push_back(newPeer);

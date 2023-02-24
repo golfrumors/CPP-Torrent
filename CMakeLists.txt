@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.19)
 
+set(CMAKE_CXX_fLAGS "${CMAKE_CXX_FLAGS} -mavx")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_NANOSLEEP")
+
+
 set(CMAKE_CXX_COMPILER "g++")
 
 project(TorrentClient VERSION 1.0.0)
@@ -17,9 +22,9 @@ add_library(loguru STATIC lib/loguru/loguru.cpp lib/loguru/loguru.hpp)
 
 #cpr
 include(FetchContent)
-FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/whoshuu/cpr.git 
-                         GIT_TAG 0817715923c9705e68994eb52ef9df3f6845beba) #the commit hash for 1.10.0
-FetchContent_MakeAvailable(cpr)
+FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
+                         GIT_TAG 8f6c994a6044762adbce8ea22e0cf740b8ce79d5) # The commit hash for 1.8.1. Replace with the latest from: https://github.com/libcpr/cpr/releases
+FetchContent_MakeAvailable(cpr) #the commit hash for 1.10.0
 
 #curl
 find_package(CURL)
@@ -61,4 +66,4 @@ add_executable(TorrentClient src/main.cpp
                              include/SharedQueue.h)
 
 
-target_link_libraries(TorrentClient PRIVATE bencoding cpr loguru ${CURL_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(TorrentClient PRIVATE bencoding cpr::cpr loguru ${CURL_LIBRARIES} ${OPENSSL_LIBRARIES})
